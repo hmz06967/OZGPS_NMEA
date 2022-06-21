@@ -31,6 +31,7 @@ on NMEA is at https://gpsd.gitlab.io/gpsd/NMEA.html
 Becareful!!
 
 ``uint16_t filter = 0x37;``
+
 ``gps.set_filter(filter);" ``
 
 By specifying a filter, you can remove the sentence that you do not want parsed in NMEA. The program first determines the data type and sees if it can be bypassed.
