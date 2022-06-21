@@ -30,9 +30,11 @@ on NMEA is at https://gpsd.gitlab.io/gpsd/NMEA.html
 By specifying a filter, you can remove the sentence that you do not want parsed in NMEA. The program first determines the data type and sees if it can be bypassed.
 
 ``{"TXT","RMC","GGA","GLL","VTG","GSA","GSV","MSS","TRF","STN","XTE","ZDA"};``
+
 ``b: 1     1     1     0     1     1     0     0     0     0     0     0 ->> 0x37``   
-``//** bit2hex(12bit:4096);  `
-`
+
+``//** bit2hex(12bit:4096);  ``
+
 Becareful!!
 ``uint16_t filter = 0x37;``
 ``gps.set_filter(filter);" ``
