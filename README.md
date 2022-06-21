@@ -56,7 +56,7 @@ following function:
 * ``...``
 * ``... gps.encode(c);``
 * ``float latitude = mgps.rmc.dms.latitude; //return 51.115680``
-* ``#final 51.115680``
+* ``-->> 51.115680``
 
 ```c
 struct minmea_coordinate
