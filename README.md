@@ -65,12 +65,6 @@ struct minmea_coordinate
 };
 ```
 
-The library doesn't perform this conversion automatically for the following reasons:
-
-* The conversion is not reversible.
-* It requires floating point support.
-* The user might want to perform this conversion later on or retain the original values.
-
 ## Example
 
 ```c
