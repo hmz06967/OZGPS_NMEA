@@ -29,6 +29,7 @@ on NMEA is at https://gpsd.gitlab.io/gpsd/NMEA.html
 ## Set Filter NMEA Sentence
 
 Becareful!!
+
 ``uint16_t filter = 0x37;``
 ``gps.set_filter(filter);" ``
 
