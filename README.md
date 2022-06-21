@@ -55,7 +55,8 @@ following function:
 * ``gps.init(&mgps);``
 * ``...``
 * ``... gps.encode(c);``
-* ``float latitude = mgps.rmc.dms.latitude; //return float(51.115680)``
+* ``float latitude = mgps.rmc.dms.latitude; //return 51.115680``
+* ``#final 51.115680``
 
 ```c
 struct minmea_coordinate
