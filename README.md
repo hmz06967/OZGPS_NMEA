@@ -88,6 +88,7 @@ int main(){
         }
     }
 
+    printf("latitude: %f", mgps.rmc.dms.latitude);
     printf("gps_error: %d", gpsflag);
 
 }
