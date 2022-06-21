@@ -51,7 +51,21 @@ Internally, minmea stores it as a fractional number (see above); for practical u
 the value should be probably converted to the DD.DDDDD floating point format using the
 following function:
 
-* ``minmea_tocoord({-375165, 100}) => -37.860832``
+* ``MGPS mgps;``
+* ``gps.init(&mgps);``
+* ``...``
+* ``... gps.encode(c);``
+* ``float latitude = mgps.rmc.dms.latitude; //return float(51.115680)``
+
+```c
+struct minmea_coordinate
+{
+    float latitude;
+    char latdirect;
+    float longitude;
+    char longdirect;
+};
+```
 
 The library doesn't perform this conversion automatically for the following reasons:
 
