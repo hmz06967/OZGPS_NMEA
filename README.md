@@ -1,4 +1,4 @@
-# minmea, a lightweight GPS NMEA 0183 parser library
+# Nmea, GPS NMEA 0183 parser library
 
 [![C/C++ 
 CI](https://github.com/kosma/minmea/actions/workflows/c-cpp.yml/badge.svg)](https://github.com/kosma/minmea/actions/workflows/c-cpp.yml)
