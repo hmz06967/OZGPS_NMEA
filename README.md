@@ -46,10 +46,7 @@ struct minmea_sentence_txt
 
 ## Coordinate format
 
-NMEA uses the clunky ``DDMM.MMMM`` format which, honestly, is not good in the internet era.
-Internally, minmea stores it as a fractional number (see above); for practical uses,
-the value should be probably converted to the DD.DDDDD floating point format using the
-following function:
+NMEA uses ``DDMM.MMMM`` format which, honestly, is not good in the internet era. Internally, minmea stores it as a fractional number for practical uses, the value should be probably converted to the ``DD.DDDDD`` floating point format using the following.
 
 * ``MGPS mgps;``
 * ``gps.init(&mgps);``
