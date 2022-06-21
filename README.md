@@ -26,6 +26,17 @@ on NMEA is at https://gpsd.gitlab.io/gpsd/NMEA.html
 ## Start
 ``#include "ozgps.h" ``
 
+## Set Filter NMEA Sentence
+By specifying a filter, you can remove the sentence that you do not want parsed in NMEA. The program first determines the data type and sees if it can be bypassed.
+
+``{"TXT","RMC","GGA","GLL","VTG","GSA","GSV","MSS","TRF","STN","XTE","ZDA"};``
+``b: 1     1     1     0     1     1     0     0     0     0     0     0 ->> 0x37``   
+``//** bit2hex(12bit:4096);  `
+`
+Becareful!!
+``uint16_t filter = 0x37;``
+``gps.set_filter(filter);" ``
+
 ## Data type for sentence
 
 The data format is like this, there are more data formats in the library. ``"NMEA"`` retains the type of format it supports. For example, in float data type, NMEA data is the same as ``"struct"`` structure.
