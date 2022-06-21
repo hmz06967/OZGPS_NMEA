@@ -35,6 +35,12 @@ By specifying a filter, you can remove the sentence that you do not want parsed 
 
 ``//** bit2hex(12bit:4096);  ``
 
+Output sentences: 
+
+``0x37-->> "TXT","RMC","GGA","VTG","GSA"``
+
+skipped over other sentences and not parsed
+
 Becareful!!
 ``uint16_t filter = 0x37;``
 ``gps.set_filter(filter);" ``
