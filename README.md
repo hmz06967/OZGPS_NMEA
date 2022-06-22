@@ -1,7 +1,7 @@
 # Nmea, GPS NMEA 0183 parser library
-
+ 
 [![C/C++ 
-CI](https://github.com/kosma/minmea/actions/workflows/c-cpp.yml/badge.svg)](https://github.com/kosma/minmea/actions/workflows/c-cpp.yml)
+CI](https://github.com/kosma/minmea/actions/workflows/c-cpp.yml/badge.svg)](https://github.com/hmz06967/OZGPS_NMEA/actions/workflows/c-cpp.yml)
 
 A library that parses NMEA gps record from Uart or any source ``"gps.encode(char c);"`` can parse sequentially with a single character.
 
