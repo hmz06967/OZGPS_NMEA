@@ -134,6 +134,8 @@ cd build
 cmake ../
 make
 make test
+//or
+g++ -o example *.cpp .\example
 ```
 
 ## Licensing
