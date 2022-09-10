@@ -16,10 +16,14 @@
  */
 #include "ozgps.h"
 
+char OZGPS::nimea_terms[30][20];
+char OZGPS::term[20];//term
+
 // The optional checksum is an XOR of all bytes between "$" and "*".
 int8_t OZGPS::init(struct MGPS *mpgs){
     p_mgps = mpgs;
     is_init = true;
+    return is_init;
 }
 
 char buffer[100];
@@ -28,12 +32,15 @@ int8_t OZGPS::set_filter(uint16_t filter){
     //**bit2hex(12bit:4096); {"TXT","RMC","GGA","GLL","VTG","GSA","GSV","MSS","TRF","STN","XTE","ZDA"}; 
     //WARNING!(no limit 0xfff or 0)
     filter_stc = filter;
+    return 1;
 }
 
 int8_t OZGPS::set_error(int8_t flag, const char *err){
     error_flag = flag;
-    sprintf(buffer, "GPS flag: %d, error: %s\n", flag, err);
-    if(DEBUG_GPS)printf(buffer);
+    if(DEBUG_GPS){
+        sprintf(buffer, "GPS flag: %d, error: %s\n", flag, err);
+        printf(buffer);
+    }
     error = buffer;
     return false;
 }
@@ -72,10 +79,9 @@ uint8_t OZGPS::get_integer(const char *tterm, long int *fint){
 }
 
 uint8_t OZGPS::get_float(const char *tterm, float *flnum){
+    
     uint8_t f = 0, k = 0; 
     bool ferr = true;
-
-    *flnum = strtof(tterm, NULL);
 
     while(f < c2int(tterm[TTERM_ARR_SIZE-1])){
         ferr &= isdigit(tterm[f]);
@@ -85,7 +91,11 @@ uint8_t OZGPS::get_float(const char *tterm, float *flnum){
         ferr = 1;
         f++;
     }
-    
+
+    if(ferr){
+        *flnum = strtof(tterm, NULL);
+    }
+
     return ferr ? true : set_error(STC_PARSE_ERROR, "get_float parsing");
 }
 
@@ -100,7 +110,7 @@ int OZGPS::fromHex(char a){
 
 uint8_t OZGPS::convert_to_deg(const char *tterm, float *deg, char dir){
 
-    float pd;
+    float pd  = 0.0;
 
     if(!get_float(tterm, &pd)){
         return false;
@@ -126,6 +136,18 @@ uint8_t OZGPS::convert_speed(float *var, char unit, float speed){
 
     *var = speed;
     return true;
+}
+
+void OZGPS::set_txtident(long ptr){
+    if(ptr==MINMEA_TEXT_IDT_ERROR){
+        p_mgps->txt.ident = MINMEA_TEXT_IDT_ERROR;
+    }else if(ptr==MINMEA_TEXT_IDT_WARNING){
+        p_mgps->txt.ident = MINMEA_TEXT_IDT_WARNING;
+    }else if(ptr==MINMEA_TEXT_IDT_NOTICE){
+        p_mgps->txt.ident = MINMEA_TEXT_IDT_NOTICE;
+    }else if(ptr==MINMEA_TEXT_IDT_USER){
+        p_mgps->txt.ident = MINMEA_TEXT_IDT_USER;
+    }
 }
 
 //parse coordinat
@@ -184,17 +206,22 @@ uint8_t OZGPS::sentence_parse_run(uint8_t type){
         fail_checksum_count++;
         return false;
     } 
-
+    
+    error_flag = 0;
     ++pass_checksum_count;
-    if(DEBUG_GPS)printf("GPS PASS -->> ok: %d fail: %d\n", pass_checksum_count, fail_checksum_count);
+    if(DEBUG_GPS)printf("GPS PASS -->> ok: %ld fail: %ld\n", pass_checksum_count, fail_checksum_count);
 
     // {"TXT","RMC","GGA","GLL","VTG","GSA","GSV","MSS","TRF","STN","XTE","ZDA"};
     switch (type){
         case MINMEA_SENTENCE_TXT: {
             //$GPTXT,01,01,02,ANTSTATUS=INIT*25
-            ferr &= get_integer(nimea_terms[1],  (long*)&p_mgps->txt.msgid);
-            ferr &= get_integer(nimea_terms[2],  (long*)&p_mgps->txt.msgrange);
-            ferr &= get_integer(nimea_terms[3],  (long*)&p_mgps->txt.ident);
+            long ptr;
+            ferr &= get_integer(nimea_terms[1],  &ptr);
+            p_mgps->txt.msgid = ptr;
+            ferr &= get_integer(nimea_terms[2],  &ptr);
+            p_mgps->txt.msgrange = ptr;
+            ferr &= get_integer(nimea_terms[3],  &ptr);
+                set_txtident(ptr);
             p_mgps->txt.msg = (char *)nimea_terms[4];
             p_mgps->emittime = millis();
             valid = true;
@@ -213,6 +240,7 @@ uint8_t OZGPS::sentence_parse_run(uint8_t type){
                 ferr &= get_float(nimea_terms[7], &p_mgps->rmc.speed);
                 ferr &= get_float(nimea_terms[8], &p_mgps->rmc.course);
                 ferr &= get_datetime(nimea_terms[9], &p_mgps->rmc.time.day, &p_mgps->rmc.time.mon, &p_mgps->rmc.time.year, &p_mgps->rmc.time.msec);
+                
                 p_mgps->rmc.variation = nimea_terms[10][0];
                 p_mgps->rmc.vardirect = nimea_terms[11][0]; 
                 p_mgps->rmc.speed *= _GPS_KMPH_PER_KNOT;//convert speed, knots to km/h 
@@ -225,13 +253,16 @@ uint8_t OZGPS::sentence_parse_run(uint8_t type){
         case MINMEA_SENTENCE_GGA:{//trust
             //$GPGGA,123204.00,5106.94086,N,01701.51680,E,1,06,3.86,127.9,M,40.5,M,,*51
             p_mgps->gga.fix_quality =  c2int(nimea_terms[6][0]);
+            
             if(p_mgps->gga.fix_quality==1){//validate message
                 ferr = get_datetime(nimea_terms[1], &p_mgps->gga.time.hours, &p_mgps->gga.time.minutes, &p_mgps->gga.time.seconds, &p_mgps->gga.time.microseconds);
                 p_mgps->gga.dms.latdirect =  nimea_terms[3][0];
                 p_mgps->gga.dms.longdirect = nimea_terms[5][0];
                 ferr &= get_coordinate(nimea_terms[2], &p_mgps->gga.dms.latitude, p_mgps->gga.dms.latdirect);
                 ferr &= get_coordinate(nimea_terms[4], &p_mgps->gga.dms.longitude,  p_mgps->gga.dms.longdirect);
-                ferr &= get_integer(nimea_terms[7],  (long*)&p_mgps->gga.satellites_tracked);
+                long ptr = p_mgps->gga.satellites_tracked;
+                ferr &= get_integer(nimea_terms[7],  &ptr);
+                p_mgps->gga.satellites_tracked = ptr;
                 ferr &= get_float(nimea_terms[8], &p_mgps->gga.hdop);
                 ferr &= get_float(nimea_terms[9], &p_mgps->gga.altitude);
                 
@@ -293,11 +324,15 @@ uint8_t OZGPS::sentence_parse_run(uint8_t type){
             p_mgps->gsv[msg_num].msg_nr = msg_num;
             p_mgps->gsv[msg_num].total_msgs = c2int(nimea_terms[1][0]);
             p_mgps->gsv[msg_num].total_sats = atoi(nimea_terms[3]);
-
-            ferr = get_integer(nimea_terms[4], (long*)(&p_mgps->gsv[msg_num].sats->id));
-            ferr &= get_integer(nimea_terms[5], (long*)(&p_mgps->gsv[msg_num].sats->elevation));
-            ferr &= get_integer(nimea_terms[6], (long*)(&p_mgps->gsv[msg_num].sats->azimuth));
-            ferr &= get_integer(nimea_terms[7], (long*)(&p_mgps->gsv[msg_num].sats->snr));
+            long ptr;
+            ferr = get_integer(nimea_terms[4], &ptr);
+            p_mgps->gsv[msg_num].sats->id = ptr;
+            ferr &= get_integer(nimea_terms[5], &ptr);
+            p_mgps->gsv[msg_num].sats->elevation = ptr;
+            ferr &= get_integer(nimea_terms[6], &ptr); 
+            p_mgps->gsv[msg_num].sats->azimuth = ptr;
+            ferr &= get_integer(nimea_terms[7], &ptr);
+            p_mgps->gsv[msg_num].sats->snr = ptr;
             p_mgps->emittime = millis();
             valid = true;
 
@@ -334,7 +369,12 @@ uint8_t OZGPS::nmea_parser(){
 
         for(int i=0;i<term_offset;i++){
             nimea_terms[term_count-1][i] = term[i];
-            if(DEBUG_GPS_TEXT)printf("%c", nimea_terms[term_count-1][i]);
+            if(DEBUG_GPS_TEXT){
+                if(i<19 && nimea_terms[term_count-1][i]=='G' && nimea_terms[term_count-1][i+1]=='P'){
+                    printf("\n");
+                }
+                printf("%c", nimea_terms[term_count-1][i]);
+            }
         }
 
         nimea_terms[term_count-1][TTERM_ARR_SIZE-1] = term_offset+'0';
@@ -358,8 +398,8 @@ uint8_t OZGPS::encode(char c){
     }   
 
     if(is_checksum){
-        if(checksum == 0){
-            checksum += 16 * fromHex(c);
+        if(checksum ==-2){
+            checksum = 16 * fromHex(c);
         }else{
             checksum += fromHex(c);
             is_checksum = false;
@@ -377,7 +417,7 @@ uint8_t OZGPS::encode(char c){
         nmea_parser();
         //printf(" T:%d \n",term_count);
         term_count = 0;
-        checksum = 0;
+        checksum = -2;
         is_checksum = true;
         sentence_finded = false;
     }

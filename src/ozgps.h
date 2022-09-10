@@ -24,14 +24,10 @@
 #include <ctype.h>
 #include <math.h> 
 
-#ifndef millis
-#define millis() ((uint32_t)(1))
-#endif
-
-#ifndef DEBUG
-#define DEBUG_GPS 1
+#ifndef GPS_DEBUG
+#define DEBUG_GPS 0
 #else
-#define DEBUG_GPS DEBUG
+#define DEBUG_GPS GPS_DEBUG
 #endif
 #define DEBUG_GPS_TEXT (false)
 
@@ -48,7 +44,6 @@
 #define _GPS_FEET_PER_METER 3.2808399
 #define _GPS_MAX_FIELD_SIZE 15
 
-#define GPS_DEBUG false
 #define STC_PARSE_ERROR 136 
 #define STC_ARRAY_SIZE 12
 #define TTERM_ARR_SIZE 20
@@ -163,12 +158,12 @@ struct minmea_sentence_gsv {
 };
 
 enum minmea_faa_mode {
+    MINMEA_FAA_MODE_NOT_VALID = 'N',
     MINMEA_FAA_MODE_AUTONOMOUS = 'A',
     MINMEA_FAA_MODE_DIFFERENTIAL = 'D',
     MINMEA_FAA_MODE_ESTIMATED = 'E',
     MINMEA_FAA_MODE_MANUAL = 'M',
     MINMEA_FAA_MODE_SIMULATED = 'S',
-    MINMEA_FAA_MODE_NOT_VALID = 'N',
     MINMEA_FAA_MODE_PRECISE = 'P',
 };
 
@@ -189,7 +184,9 @@ struct minmea_sentence_zda {
 struct MGPS
 {
     uint32_t emittime;
+    uint8_t pps;
     uint8_t perror;
+    uint8_t tmode;
     struct minmea_sentence_txt txt;
     struct minmea_sentence_rmc rmc;
     struct minmea_sentence_gga gga;
@@ -255,8 +252,8 @@ class OZGPS{
     uint8_t is_checksum;
 
     //parse variable
-    char nimea_terms[30][20];
-    char term[20];//term
+    static char nimea_terms[30][20];
+    static char term[20];//term
     uint8_t term_count = 0;
     uint8_t term_offset = 0;
     uint8_t nimea_terms_count = 0;
@@ -265,7 +262,7 @@ class OZGPS{
     int8_t sentence_type;
     uint8_t sentence_finded;
     uint8_t sentence_has_fix;
-    uint8_t checksum;
+    int8_t checksum;
 
   public:
     //start init variable
@@ -288,11 +285,12 @@ class OZGPS{
     int8_t init(struct MGPS *mpgs);
     int8_t set_filter(uint16_t filter);
     uint8_t encode(char c);
+    
+    static inline bool minmea_isfield(char c);
 
   private:
     int8_t sentence_check(void);
     uint8_t sentence_parse_run(uint8_t type);
-    static inline bool minmea_isfield(char c);
     uint8_t nmea_parser(void);
 
     int fromHex(char a);
@@ -304,7 +302,8 @@ class OZGPS{
     uint8_t get_coordinate(const char *tterm, float *dms, char dir);
     uint8_t get_datetime(const char *tterm, uint8_t *v0, uint8_t *v1, uint8_t *v2, uint8_t *v3);
     
-    
+    void set_txtident(long ptr);
+
     int8_t set_error(int8_t flag, const char *err);
 
 };
