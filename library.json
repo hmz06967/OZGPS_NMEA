@@ -1,7 +1,7 @@
 {
   "name": "OZGPS_NMEA",
   "version": "1.2.1",
-  "description": "This project is a parser software that works for all gps receivers, supports the entire NMEA sentence protocol, performs translation for you, supports all embedded devices, because it is only the parser software, and when it is a lightweight software, it breaks down the sentence and transfers it to the sequence by reading with a single character, which will be very useful in your embedded projects.
+  "description": "GPS NMEA protokol parser, supports all embedded devices, because it is only the parser software, it breaks down the sentence and transfers it to the sequence by reading with a single char.
 ",
   "keywords": "GPS, NMEA, parser, library, communication",
   "repository": {
